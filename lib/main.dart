@@ -26,18 +26,110 @@ class _GameOfLifeScreenState extends State<GameOfLifeScreen> {
   static const int movesPerSecond = 10; // Increase the update rate
 
   bool isPlaying = false;
+  String selectedPatternName = 'Select one';
   late List<List<bool>> grid;
 
-  List<List<List<bool>>> predefinedPatterns = [
-// Patrón 3: Oscilador (5x5)
-    [
+  Map<String, List<List<bool>>> customPatterns = {
+    "Select one": [],
+    "Osc: Oscilador": [
       [false, false, false, false, false],
       [false, false, true, false, false],
       [false, true, true, true, false],
       [false, false, true, false, false],
       [false, false, false, false, false],
     ],
-  ];
+    "Osc: Blinker": [
+      [false, false, false, false, false],
+      [false, false, false, false, false],
+      [false, true, true, true, false],
+      [false, false, false, false, false],
+      [false, false, false, false, false],
+    ],
+    "Osc: Toad": [
+      [false, false, false, false, false],
+      [false, false, false, false, false],
+      [false, false, true, true, true],
+      [false, true, true, true, false],
+      [false, false, false, false, false],
+    ],
+    "Osc: Beacon": [
+      [false, false, false, false, false],
+      [false, true, true, false, false],
+      [false, true, false, false, false],
+      [false, false, false, false, true],
+      [false, false, false, true, true],
+    ],
+    "SLifes: Block": [
+      [false, false, false, false, false],
+      [false, true, true, false, false],
+      [false, true, true, false, false],
+      [false, false, false, false, false],
+      [false, false, false, false, false],
+    ],
+    "SLifes: Beehive": [
+      [false, false, false, false, false],
+      [false, false, true, true, false],
+      [false, true, false, false, true],
+      [false, false, true, true, false],
+      [false, false, false, false, false],
+    ],
+    "SLifes: Loaf": [
+      [false, false, false, false, false],
+      [false, false, true, true, false],
+      [false, true, false, false, true],
+      [false, false, true, false, true],
+      [false, false, false, true, false],
+    ],
+    "SLifes: Boat": [
+      [false, false, false, false, false],
+      [false, true, true, false, false],
+      [false, true, false, true, false],
+      [false, false, true, false, false],
+      [false, false, false, false, false],
+    ],
+    "SLifes: Tub": [
+      [false, false, false, false, false],
+      [false, false, true, false, false],
+      [false, true, false, true, false],
+      [false, false, true, false, false],
+      [false, false, false, false, false],
+    ],
+    "SpSh: Glider": [
+      [false, false, false, false, false],
+      [false, false, true, false, false],
+      [false, false, false, true, false],
+      [false, true, true, true, false],
+      [false, false, false, false, false],
+    ],
+    "SpSh: Lightweight": [
+      [false, false, false, false, false],
+      [false, true, false, false, true],
+      [false, false, false, false, true],
+      [false, true, false, true, true],
+      [false, false, true, true, true],
+    ],
+    "SpSh: Middleweight": [
+      [false, false, false, false, false],
+      [false, false, true, true, false],
+      [false, true, false, false, true],
+      [false, true, false, false, true],
+      [false, true, true, true, true],
+    ],
+    "SpSh: Heavyweight": [
+      [false, false, false, false, false],
+      [false, true, true, true, false],
+      [false, true, false, false, true],
+      [false, true, false, false, true],
+      [false, true, true, true, true],
+    ],
+    "Guns: Gosper": [
+      [false, false, false, false, false],
+      [false, false, false, false, false],
+      [false, false, true, true, false],
+      [false, true, false, false, false],
+      [false, true, false, false, false],
+    ],
+  };
 
   List<List<bool>>? selectedPattern;
 
@@ -49,6 +141,11 @@ class _GameOfLifeScreenState extends State<GameOfLifeScreen> {
 
   void initializeGrid() {
     grid = List.generate(numRows, (i) => List.filled(numCols, false));
+  }
+
+  void clearGrid() {
+    grid = List.generate(numRows, (i) => List.filled(numCols, false));
+    setState(() {});
   }
 
   void toggleCell(int row, int col) {
@@ -129,6 +226,8 @@ class _GameOfLifeScreenState extends State<GameOfLifeScreen> {
     setState(() {});
   }
 
+  bool isClear = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,51 +270,61 @@ class _GameOfLifeScreenState extends State<GameOfLifeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.grey[900],
-                    ),
-                    onPressed: () {
-                      setGameBeingPlayed(true);
-                    },
-                    child: Text('Play'),
-                  ),
-                  SizedBox(width: 20),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.grey[900],
+                      ),
+                      onPressed: () {
+                        if (isPlaying) {
+                          setGameBeingPlayed(false);
+                        } else {
+                          setGameBeingPlayed(true);
+                        }
+                      },
+                      child: Icon(isPlaying ? Icons.pause : Icons.play_arrow)),
+                  SizedBox(width: 5),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber,
                       foregroundColor: Colors.grey[900],
                     ),
                     onPressed: () {
-                      setGameBeingPlayed(false);
+                      if (isClear) {
+                        autofillGrid(20);
+                        isClear = false;
+                      } else {
+                        clearGrid();
+                        isClear = true;
+                      }
                     },
-                    child: Text('Stop'),
+                    child: Text('Autofill/Clear'),
                   ),
-                  SizedBox(width: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.grey[900],
-                    ),
-                    onPressed: () {
-                      autofillGrid(30);
-                    },
-                    child: Text('Autofill'),
-                  ),
-                  SizedBox(width: 20),
-                  DropdownButton<List<List<bool>>>(
-                    value: selectedPattern,
-                    items: predefinedPatterns.map((pattern) {
-                      return DropdownMenuItem<List<List<bool>>>(
-                        value: pattern,
-                        child: Text(
-                            'Patrón ${predefinedPatterns.indexOf(pattern) + 1}'),
+                  SizedBox(width: 5),
+                  DropdownButton<String>(
+                    value: selectedPatternName,
+                    items: customPatterns.keys.map((String patternName) {
+                      return DropdownMenuItem<String>(
+                        value: patternName,
+                        child: Text(patternName,
+                            style: TextStyle(color: Colors.blue)),
                       );
                     }).toList(),
-                    onChanged: (selectedPattern) {
-                      for (int row = 0; row < 5; row++) {
-                        for (int col = 0; col < 5; col++) {
-                          grid[row][col] = selectedPattern![row][col];
+                    onChanged: (selectedPatternName) {
+                      clearGrid();
+                      // Obtén el patrón seleccionado del Map usando su nombre
+                      List<List<bool>> selectedPattern =
+                          customPatterns[selectedPatternName] ?? [];
+
+                      // Coloca el patrón seleccionado en el centro de la cuadrícula
+                      int startRow = (numRows - selectedPattern.length) ~/ 2;
+                      int startCol = (numCols - selectedPattern[0].length) ~/ 2;
+
+                      for (int row = 0; row < selectedPattern.length; row++) {
+                        for (int col = 0;
+                            col < selectedPattern[0].length;
+                            col++) {
+                          grid[startRow + row][startCol + col] =
+                              selectedPattern[row][col];
                         }
                       }
                       setState(() {});
